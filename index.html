@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Exhale</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(to bottom,#eef2f7,#dfe7ef);
+  overflow:hidden;
+}
+
+.screen{
+  position:absolute;
+  width:100%;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  text-align:center;
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .6s ease, transform .6s ease;
+}
+
+.screen.active{
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+
+.screen:not(.active){
+  pointer-events:none;
+}
+
+.top-exit{
+  position:absolute;
+  top:20px;
+  right:20px;
+  font-size:13px;
+  padding:8px 14px;
+  border-radius:20px;
+  background:white;
+}
+
+p{
+  font-size:24px;
+  max-width:320px;
+  line-height:1.4;
+  color:#2d3748;
+}
+
+button{
+  margin:10px;
+  padding:15px 28px;
+  border:none;
+  border-radius:30px;
+  background:white;
+  font-size:16px;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+  cursor:pointer;
+  transition:.25s;
+}
+
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 6px 20px rgba(0,0,0,.12);
+}
+
+.breath{
+  width:140px;
+  height:140px;
+  border-radius:50%;
+  background:radial-gradient(circle,#bbf7d0,#86efac);
+  animation:breathe 4s infinite ease-in-out;
+  margin-top:30px;
+}
+
+@keyframes breathe{
+  0%{transform:scale(.85);opacity:.7;}
+  50%{transform:scale(1.1);opacity:1;}
+  100%{transform:scale(.85);opacity:.7;}
+}
+</style>
+</head>
+<body>
+
+<!-- Arrival -->
+<div class="screen active" id="arrival">
+<button class="top-exit" onclick="exitApp()">Go back to noisy world</button>
+<p>You don’t need to decide anything right now.<br><b>Just breathe.</b></p>
+<div class="breath"></div>
+</div>
+
+<!-- Continue -->
+<div class="screen" id="continue">
+<button class="top-exit" onclick="exitApp()">Go back to noisy world</button>
+<p>Ready?</p>
+<button id="continueBtn">Continue</button>
+</div>
+
+<!-- Body -->
+<div class="screen" id="body">
+<button class="top-exit" onclick="exitApp()">Go back to noisy world</button>
+<p>How does your body feel?</p>
+<button class="body" data-value="heavy">Heavy</button>
+<button class="body" data-value="neutral">Neutral</button>
+<button class="body" data-value="light">Light</button>
+<button class="body" data-value="tense">Tense</button>
+</div>
+
+<!-- Energy -->
+<div class="screen" id="energy">
+<button class="top-exit" onclick="exitApp()">Go back to noisy world</button>
+<p>Your energy level?</p>
+<button class="energy" data-value="low">Low</button>
+<button class="energy" data-value="medium">Medium</button>
+<button class="energy" data-value="high">High</button>
+<button class="energy" data-value="wired">Wired</button>
+</div>
+
+<!-- Hunger -->
+<div class="screen" id="hunger">
+<button class="top-exit" onclick="exitApp()">Go back to noisy world</button>
+<p>How hungry are you?</p>
+<button class="hunger" data-value="not">Not hungry</button>
+<button class="hunger" data-value="little">A little</button>
+<button class="hunger" data-value="very">Very hungry</button>
+<button class="hunger" data-value="starving">Starving</button>
+</div>
+
+<!-- Mind -->
+<div class="screen" id="mind">
+<button class="top-exit" onclick="exitApp()">Go back to noisy world</button>
+<p>How does your mind feel?</p>
+<button class="mind" data-value="calm">Calm</button>
+<button class="mind" data-value="foggy">Foggy</button>
+<button class="mind" data-value="restless">Restless</button>
+<button class="mind" data-value="sharp">Sharp</button>
+</div>
+
+<!-- Result -->
+<div class="screen" id="result">
+<button class="top-exit" onclick="exitApp()">Go back to noisy world</button>
+<p id="text"></p>
+<button onclick="resetApp()">Restart</button>
+</div>
+
+<script>
+
+// navigation
+let locked=false;
+function go(id){
+  if(locked) return;
+  locked=true;
+
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+
+  setTimeout(()=>locked=false,600);
+}
+
+
+// states
+let body="",energy="",hunger="",mind="";
+let startTimer;
+
+
+// ---------- EXIT APP ----------
+function exitApp(){
+  resetState();
+  go("arrival");
+  restartTimer();
+}
+
+
+// ---------- RESET ----------
+function resetApp(){
+  resetState();
+  go("arrival");
+  restartTimer();
+}
+
+
+// clear all user selections
+function resetState(){
+  body="";
+  energy="";
+  hunger="";
+  mind="";
+}
+
+
+// restart breathing timer
+function restartTimer(){
+  clearTimeout(startTimer);
+  startTimer=setTimeout(()=>go("continue"),3000);
+}
+
+
+// ---------- RESPONSE ENGINE ----------
+function suggest(b,e,h,m){
+
+const bodyMap={
+heavy:"Your body asks for gentleness.",
+neutral:"Your body feels balanced.",
+light:"Your body is ready to move.",
+tense:"Your body holds quiet tension."
+};
+
+const energyMap={
+low:"Your energy is dim.",
+medium:"Your energy is steady.",
+high:"Your energy is bright.",
+wired:"Your energy is restless."
+};
+
+const hungerMap={
+not:"You are nourished.",
+little:"You could use light fuel.",
+very:"Your system needs food.",
+starving:"Your body needs care soon."
+};
+
+const mindMap={
+calm:"Your mind is peaceful.",
+foggy:"Your thoughts are slow clouds.",
+restless:"Your thoughts are wandering.",
+sharp:"Your awareness is clear."
+};
+
+const actionMatrix={
+heavy:{low:"Rest softly.",medium:"Stretch slowly.",high:"Walk gently.",wired:"Release tension slowly."},
+neutral:{low:"Pause quietly.",medium:"Do one simple task.",high:"Begin something small.",wired:"Ground yourself first."},
+light:{low:"Close eyes briefly.",medium:"Step outside.",high:"Start something meaningful.",wired:"Channel energy calmly."},
+tense:{low:"Breathe deeper.",medium:"Unclench slowly.",high:"Move deliberately.",wired:"Slow everything down."}
+};
+
+const foodMatrix={
+not:"Continue as you are.",
+little:"A light snack would support you.",
+very:"Eat something warm.",
+starving:"Food is priority now."
+};
+
+return `
+${bodyMap[b]}
+${energyMap[e]}
+${hungerMap[h]}
+${mindMap[m]}
+
+${actionMatrix[b][e]} ${foodMatrix[h]}
+`;
+}
+
+
+// ---------- FLOW ----------
+function startFlow(){
+  startTimer=setTimeout(()=>go("continue"),3000);
+}
+startFlow();
+
+
+// ---------- BUTTON EVENTS ----------
+
+// continue
+document.getElementById("continueBtn").onclick=()=>go("body");
+
+// body
+document.querySelectorAll(".body").forEach(b=>{
+  b.onclick=()=>{
+    body=b.dataset.value;
+    go("energy");
+  }
+});
+
+// energy
+document.querySelectorAll(".energy").forEach(e=>{
+  e.onclick=()=>{
+    energy=e.dataset.value;
+    go("hunger");
+  }
+});
+
+// hunger
+document.querySelectorAll(".hunger").forEach(h=>{
+  h.onclick=()=>{
+    hunger=h.dataset.value;
+    go("mind");
+  }
+});
+
+// mind
+document.querySelectorAll(".mind").forEach(m=>{
+  m.onclick=()=>{
+    mind=m.dataset.value;
+    document.getElementById("text").innerText=suggest(body,energy,hunger,mind);
+    go("result");
+  }
+});
+
+</script>
+</body>
+</html>

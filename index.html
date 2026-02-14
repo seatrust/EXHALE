@@ -2,8 +2,11 @@
 <html>
 <head>
 <title>Exhale</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+
+/* ---------- BASE ---------- */
 body{
   margin:0;
   font-family:Arial;
@@ -11,6 +14,7 @@ body{
   overflow:hidden;
 }
 
+/* ---------- SCREENS ---------- */
 .screen{
   position:absolute;
   width:100%;
@@ -21,13 +25,13 @@ body{
   flex-direction:column;
   text-align:center;
   opacity:0;
-  transform:translateY(10px);
-  transition:opacity .6s ease, transform .6s ease;
+  transform:translateY(20px) scale(.98);
+  transition:all .7s cubic-bezier(.22,.8,.25,1);
 }
 
 .screen.active{
   opacity:1;
-  transform:translateY(0);
+  transform:translateY(0) scale(1);
   pointer-events:auto;
 }
 
@@ -35,54 +39,64 @@ body{
   pointer-events:none;
 }
 
+/* ---------- TEXT ---------- */
+p{
+  font-size:clamp(20px,4.2vw,30px);
+  max-width:340px;
+  line-height:1.5;
+  color:#2d3748;
+}
+
+/* ---------- BUTTONS ---------- */
+button{
+  margin:10px;
+  padding:16px 30px;
+  border:none;
+  border-radius:40px;
+  background:rgba(255,255,255,.55);
+  backdrop-filter:blur(10px);
+  font-size:clamp(16px,3.8vw,20px);
+  box-shadow:0 6px 25px rgba(0,0,0,.08);
+  cursor:pointer;
+  transition:.3s;
+}
+
+button:hover{
+  transform:scale(1.07);
+  box-shadow:0 10px 30px rgba(0,0,0,.14);
+}
+
+button:active{
+  transform:scale(.96);
+}
+
+/* ---------- EXIT BUTTON ---------- */
 .top-exit{
   position:absolute;
   top:20px;
   right:20px;
-  font-size:13px;
-  padding:8px 14px;
-  border-radius:20px;
-  background:white;
-}
-
-p{
-  font-size:24px;
-  max-width:320px;
-  line-height:1.4;
-  color:#2d3748;
-}
-
-button{
-  margin:10px;
-  padding:15px 28px;
-  border:none;
+  font-size:clamp(12px,3vw,15px);
+  padding:10px 18px;
   border-radius:30px;
   background:white;
-  font-size:16px;
-  box-shadow:0 4px 14px rgba(0,0,0,.08);
-  cursor:pointer;
-  transition:.25s;
 }
 
-button:hover{
-  transform:scale(1.05);
-  box-shadow:0 6px 20px rgba(0,0,0,.12);
-}
-
+/* ---------- BREATHING SPHERE ---------- */
 .breath{
-  width:140px;
-  height:140px;
+  width:160px;
+  height:160px;
   border-radius:50%;
-  background:radial-gradient(circle,#bbf7d0,#86efac);
-  animation:breathe 4s infinite ease-in-out;
-  margin-top:30px;
+  background:radial-gradient(circle,#c7f0ff,#8ed8f8);
+  animation:breathe 5s infinite ease-in-out;
+  margin-top:35px;
 }
 
 @keyframes breathe{
-  0%{transform:scale(.85);opacity:.7;}
-  50%{transform:scale(1.1);opacity:1;}
-  100%{transform:scale(.85);opacity:.7;}
+  0%{transform:scale(.75);opacity:.65;}
+  50%{transform:scale(1.15);opacity:1;}
+  100%{transform:scale(.75);opacity:.65;}
 }
+
 </style>
 </head>
 <body>
@@ -150,41 +164,26 @@ button:hover{
 
 <script>
 
-// navigation
+/* ---------- NAVIGATION ---------- */
 let locked=false;
+
 function go(id){
   if(locked) return;
   locked=true;
 
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".screen")
+  .forEach(s=>s.classList.remove("active"));
+
   document.getElementById(id).classList.add("active");
 
-  setTimeout(()=>locked=false,600);
+  setTimeout(()=>locked=false,700);
 }
 
-
-// states
+/* ---------- STATE ---------- */
 let body="",energy="",hunger="",mind="";
-let startTimer;
+let timer;
 
-
-// ---------- EXIT APP ----------
-function exitApp(){
-  resetState();
-  go("arrival");
-  restartTimer();
-}
-
-
-// ---------- RESET ----------
-function resetApp(){
-  resetState();
-  go("arrival");
-  restartTimer();
-}
-
-
-// clear all user selections
+/* ---------- RESET ---------- */
 function resetState(){
   body="";
   energy="";
@@ -192,15 +191,22 @@ function resetState(){
   mind="";
 }
 
-
-// restart breathing timer
 function restartTimer(){
-  clearTimeout(startTimer);
-  startTimer=setTimeout(()=>go("continue"),3000);
+  clearTimeout(timer);
+  timer=setTimeout(()=>go("continue"),3500);
 }
 
+function resetApp(){
+  resetState();
+  go("arrival");
+  restartTimer();
+}
 
-// ---------- RESPONSE ENGINE ----------
+function exitApp(){
+  resetApp();
+}
+
+/* ---------- ENGINE ---------- */
 function suggest(b,e,h,m){
 
 const bodyMap={
@@ -255,20 +261,13 @@ ${actionMatrix[b][e]} ${foodMatrix[h]}
 `;
 }
 
+/* ---------- FLOW START ---------- */
+restartTimer();
 
-// ---------- FLOW ----------
-function startFlow(){
-  startTimer=setTimeout(()=>go("continue"),3000);
-}
-startFlow();
+/* ---------- EVENTS ---------- */
 
-
-// ---------- BUTTON EVENTS ----------
-
-// continue
 document.getElementById("continueBtn").onclick=()=>go("body");
 
-// body
 document.querySelectorAll(".body").forEach(b=>{
   b.onclick=()=>{
     body=b.dataset.value;
@@ -276,7 +275,6 @@ document.querySelectorAll(".body").forEach(b=>{
   }
 });
 
-// energy
 document.querySelectorAll(".energy").forEach(e=>{
   e.onclick=()=>{
     energy=e.dataset.value;
@@ -284,7 +282,6 @@ document.querySelectorAll(".energy").forEach(e=>{
   }
 });
 
-// hunger
 document.querySelectorAll(".hunger").forEach(h=>{
   h.onclick=()=>{
     hunger=h.dataset.value;
@@ -292,7 +289,6 @@ document.querySelectorAll(".hunger").forEach(h=>{
   }
 });
 
-// mind
 document.querySelectorAll(".mind").forEach(m=>{
   m.onclick=()=>{
     mind=m.dataset.value;
